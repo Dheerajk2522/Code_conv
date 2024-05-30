@@ -3,11 +3,6 @@ from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
 import re 
 
 
-def load_css():
-    with open(r"static/styles.css", "r") as f:
-        css = f"<style>{f.read()}</style>"
-        st.markdown(css, unsafe_allow_html=True)
-load_css()
 
 @st.cache_data
 # Function to read the COBOL to Java mappings from a file
@@ -113,40 +108,12 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+def load_css():
+    with open(r"static/styles.css", "r") as f:
+        css = f"<style>{f.read()}</style>"
+        st.markdown(css, unsafe_allow_html=True)
+load_css()
 
-st.markdown(
-    """
-<style>
-.st-emotion-cache-18ni7ap {
-    position: fixed;
-    top: 0px;
-    left: 0px;
-    right: 0px;
-    height: 2.875rem;
-    background: rgb(255, 255, 255);
-    outline: none;
-    z-index: 999990;
-    display: block;
-    visibility: hidden;
-}
- 
-.st-emotion-cache-1r4qj8v {
-    position: absolute;
-    background: rgb(255, 255, 255);
-    color: rgb(49, 51, 63);
-    inset: 0px;
-    color-scheme: light;
-    overflow: hidden;
-}
-.st-emotion-cache-1eo1tir {
-    padding-left: 1rem;
-    padding-right: 1rem;
-    margin-top: -250px;
-}
-<style>
-""",
-    unsafe_allow_html=True,
-)
 
 hide_st_style = """
             <style>
