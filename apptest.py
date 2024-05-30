@@ -99,7 +99,7 @@ st.markdown(
         position: relative;
         flex: 1 1 0%;
         margin-left: calc(3rem);
-        margin-top: -100px;
+        margin-top: -150px;
     }
     </style>
     """,
