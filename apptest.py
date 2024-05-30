@@ -2,7 +2,47 @@ import streamlit as st
 from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
 import re 
 
+st.set_page_config(layout="wide")
 
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
+header = st.container()
+header.title("Code Conversion")
+header.write("""<div class='fixed-header'/>""", unsafe_allow_html=True)
+
+def load_css():
+    with open(r"static/styles.css", "r") as f:
+        css = f"<style>{f.read()}</style>"
+        st.markdown(css, unsafe_allow_html=True)
+load_css()
+
+
+st.markdown(
+    """
+    <style>
+        .st-emotion-cache-vj1c9o {
+            background-color:rgb(38 39 48 / 0%);
+        }
+        div[data-testid="stVerticalBlock"] div:has(div.fixed-header) {
+            position: sticky;
+            top: 0; /* Stick to top edge */
+            background-color: rgba(230, 234, 241);
+            z-index: 999;
+            text-align: center;
+        }
+        .fixed-header {
+            border-bottom: 0;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 @st.cache_data
 # Function to read the COBOL to Java mappings from a file
@@ -80,50 +120,6 @@ def extract_target_language_code(output_code, target_language):
     if match:
         return match.group(1).strip()
     return output_code
-
-# Set page layout to wide mode
-st.set_page_config(layout="wide")
-
-# Title and logos
-header = st.container()
-header.title("Code Conversion")
-header.write("""<div class='fixed-header'/>""", unsafe_allow_html=True)
-st.markdown(
-    """
-    <style>
-        .st-emotion-cache-vj1c9o {
-            background-color:rgb(38 39 48 / 0%);
-        }
-        div[data-testid="stVerticalBlock"] div:has(div.fixed-header) {
-            position: sticky;
-            top: 0; /* Stick to top edge */
-            background-color: rgba(230, 234, 241);
-            z-index: 999;
-            text-align: center;
-        }
-        .fixed-header {
-            border-bottom: 0;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-def load_css():
-    with open(r"static/styles.css", "r") as f:
-        css = f"<style>{f.read()}</style>"
-        st.markdown(css, unsafe_allow_html=True)
-load_css()
-
-
-hide_st_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
-            </style>
-            """
-st.markdown(hide_st_style, unsafe_allow_html=True)
-
 
 # Supported languages
 languages = ["COBOL", "Java", "Python", "C++", "C#", "JavaScript"]
