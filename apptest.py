@@ -1,11 +1,7 @@
 import streamlit as st
 from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
 import os
-from dotenv import load_dotenv
 import re 
-
-# Load environment variables from .env
-load_dotenv()
 
 @st.cache_data
 # Function to read the COBOL to Java mappings from a file
@@ -24,7 +20,7 @@ def model1(source_language, target_language, source_code, code_mappings):
 
     repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
     huggingfacehub_api_token = os.getenv("HUGGINGFACE_API_TOKEN")
-    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=4096, timeout=300)
+    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=st.secrets["HUGGINGFACE_API_TOKEN"], max_new_tokens=4096, timeout=300)
 
     prompt = generate_prompt(source_language, target_language, source_code)
     output_code = llm(prompt)
@@ -34,7 +30,7 @@ def model1(source_language, target_language, source_code, code_mappings):
 
 def model2(source_language, target_language, source_code):
     repo_id = "meta-llama/Meta-Llama-3-8B-Instruct"
-    huggingfacehub_api_token = os.getenv("HUGGINGFACE_API_TOKEN")
+    huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
     llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=2000, timeout=300)
     
     prompt = generate_prompt(source_language, target_language, source_code)
@@ -45,7 +41,7 @@ def model2(source_language, target_language, source_code):
 
 def model3(source_language, target_language, source_code):
     repo_id = "google/gemma-2b"
-    huggingfacehub_api_token = os.getenv("HUGGINGFACE_API_TOKEN")
+    huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
     llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=2000, timeout=300)
 
     prompt = generate_prompt(source_language, target_language, source_code)
