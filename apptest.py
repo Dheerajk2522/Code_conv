@@ -92,18 +92,8 @@ hide_st_style = """
             </style>
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
-st.markdown(
-    """
-    <style>
-   .st-emotion-cache-1jzia57 {
-    word-break: break-word;
-    text-wrap: pretty;
-    margin-top: -85px;
-}
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+
+
 # Supported languages
 languages = ["COBOL", "Java", "Python", "C++", "C#", "JavaScript"]
 languages1 = ["Java", "Python", "C++", "C#", "JavaScript"]
