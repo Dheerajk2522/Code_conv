@@ -2,6 +2,13 @@ import streamlit as st
 from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
 import re 
 
+
+def load_css():
+    with open(r"static/styles.css", "r") as f:
+        css = f"<style>{f.read()}</style>"
+        st.markdown(css, unsafe_allow_html=True)
+load_css()
+
 @st.cache_data
 # Function to read the COBOL to Java mappings from a file
 def load_code_mappings(file_path):
