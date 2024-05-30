@@ -1,6 +1,5 @@
 import streamlit as st
 from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
-import os
 import re 
 
 @st.cache_data
@@ -29,9 +28,7 @@ def model1(source_language, target_language, source_code, code_mappings):
 
 def model2(source_language, target_language, source_code):
     repo_id = "meta-llama/Meta-Llama-3-8B-Instruct"
-    huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
-    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=2000, timeout=300)
-    
+    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=st.secrets["HUGGINGFACE_API_TOKEN"], max_new_tokens=2000, timeout=300)
     prompt = generate_prompt(source_language, target_language, source_code)
     output_code = llm(prompt)
     generated_code = extract_target_language_code(output_code, target_language)
@@ -40,8 +37,7 @@ def model2(source_language, target_language, source_code):
 
 def model3(source_language, target_language, source_code):
     repo_id = "google/gemma-2b"
-    huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
-    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=2000, timeout=300)
+    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=st.secrets["HUGGINGFACE_API_TOKEN"], max_new_tokens=2000, timeout=300)
 
     prompt = generate_prompt(source_language, target_language, source_code)
     output_code = llm(prompt)
@@ -88,6 +84,14 @@ st.set_page_config(layout="wide")
 
 # Title and logos
 st.markdown("<h1 style='text-align: center;'>Code Conversion</h1>", unsafe_allow_html=True)
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # Supported languages
 languages = ["COBOL", "Java", "Python", "C++", "C#", "JavaScript"]
