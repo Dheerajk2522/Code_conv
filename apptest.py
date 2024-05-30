@@ -95,12 +95,11 @@ st.markdown(hide_st_style, unsafe_allow_html=True)
 st.markdown(
     """
     <style>
-        .st-emotion-cache-10trblm {
-        position: relative;
-        flex: 1 1 0%;
-        margin-left: calc(3rem);
-        margin-top: -250px;
-    }
+   .st-emotion-cache-1jzia57 {
+    word-break: break-word;
+    text-wrap: pretty;
+    margin-top: -85px;
+}
     </style>
     """,
     unsafe_allow_html=True,
