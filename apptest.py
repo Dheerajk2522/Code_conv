@@ -134,7 +134,7 @@ st.markdown(
 .st-emotion-cache-1eo1tir {
     padding-left: 1rem;
     padding-right: 1rem;
-    margin-top: -150px;
+    margin-top: -250px;
 }
 <style>
 """,
