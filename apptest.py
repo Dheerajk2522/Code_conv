@@ -113,7 +113,17 @@ def remove_code_fences(code):
     return code.replace("```", "").strip()
 
 # Function to extract only the target language code from the output
-def extract_target_language_code(output_code, target_language):
+def extract_target_language_code(output_code, target_language, strict_check=False):
+    if strict_check:
+        # Split the output into lines and check for unwanted language identifiers
+        lines = output_code.split('\n')
+        extracted_lines = []
+        for line in lines:
+            if re.match(rf"^(Python|C#|Java|JavaScript|C\+\+):", line.strip()):
+                break
+            extracted_lines.append(line)
+        return '\n'.join(extracted_lines).strip()
+    
     # Ensure target language is followed by a colon and then capture everything until a new language or end of string
     pattern = re.compile(rf"{target_language}:\s*(.*?)(?=\n(?:COBOL|Java|Python|C\+\+|C#|JavaScript):|$)", re.DOTALL)
     match = pattern.search(output_code)
