@@ -90,7 +90,7 @@ def model3(source_language, target_language, source_code):
 
 # Function to generate prompt
 def generate_prompt(source_language, target_language, source_code):
-    prompt = f"{source_language}:\n{source_code}\n\n{target_language}:\n"
+    prompt = f"Here is my code{source_code}, written in {source_language}. \n\nConvert the above code to the following language: {target_language}:\n"
     return prompt
 
 # Function to clean and extract the converted code from the output
@@ -107,7 +107,7 @@ def clean_output_code(output_code):
 
     cleaned_code = '\n'.join(code_lines).strip()
     return cleaned_code
-
+    
 # Function to remove markdown code fences
 def remove_code_fences(code):
     return code.replace("```", "").strip()
