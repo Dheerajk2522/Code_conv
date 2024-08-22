@@ -45,6 +45,15 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+import streamlit as st
+from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
+import os
+from dotenv import load_dotenv
+import re 
+
+# Load environment variables from .env
+load_dotenv()
+
 @st.cache_data
 # Function to read the COBOL to Java mappings from a file
 def load_code_mappings(file_path):
@@ -56,6 +65,7 @@ def load_code_mappings(file_path):
     return code_mappings
 
 def generate_code_description(language, code):
+    print("Generating Code",'\n\n')
     repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
     huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
     llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=1024, timeout=300)
@@ -68,9 +78,8 @@ def generate_code_description(language, code):
 # Define functions for each model code
 def model1(source_language, target_language, source_code, code_mappings):
     source_description = generate_code_description(source_language, source_code)
-
     if source_language == "COBOL" and source_code.strip() in code_mappings:
-        return code_mappings[source_code.strip()]
+        generated_code = code_mappings[source_code.strip()]
     repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
     huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
     llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=4096, timeout=300)
@@ -78,7 +87,6 @@ def model1(source_language, target_language, source_code, code_mappings):
     prompt = generate_prompt(source_language, target_language, source_code)
     output_code = llm(prompt)
     generated_code = extract_target_language_code(output_code, target_language)
-
     target_description = generate_code_description(target_language, generated_code)
     return generated_code, source_description, target_description
 
@@ -89,7 +97,10 @@ def model2(source_language, target_language, source_code):
     llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=2000, timeout=300)
     
     prompt = generate_prompt(source_language, target_language, source_code)
+    # print(prompt)
     output_code = llm(prompt)
+    if "```" in output_code: 
+        output_code=output_code.split("```java")[1].split("```")[0]
     generated_code = extract_target_language_code(output_code, target_language)
 
     target_description = generate_code_description(target_language, generated_code)
@@ -112,7 +123,7 @@ def model3(source_language, target_language, source_code):
 
 # Function to generate prompt
 def generate_prompt(source_language, target_language, source_code):
-    prompt = f"{source_language}:\n{source_code}\n\n{target_language}:\n"
+    prompt = f"{source_language}:\n{source_code}\nConvert the above code into the following targer language:\n{target_language}:\n"
     return prompt
 
 # Function to clean and extract the converted code from the output
@@ -150,7 +161,11 @@ def extract_target_language_code(output_code, target_language):
     # If no matching section is found, return the original output
     return output_code.strip() 
 
+# Set page layout to wide mode
+st.set_page_config(layout="wide")
 
+# Title and logos
+st.markdown("<h1 style='text-align: center;'>Code Conversion</h1>", unsafe_allow_html=True)
 
 # Supported languages
 languages = ["COBOL", "Java", "Python", "C++", "C#", "JavaScript"]
@@ -165,12 +180,15 @@ source_code = st.text_area("Enter the source code", height=300)
 # Load code mappings
 code_mappings = load_code_mappings("Cobol_to_java_conv.txt")
 
+
+
+# for Discription 
+# show_descriptions = st.checkbox("Show code descriptions", value=True)
 source_description = ""
 if st.button("Convert"):
         # Generate source description once
     with st.spinner("Analyzing source code..."):
         source_description = generate_code_description(source_language, source_code)
-    
     
     # if show_descriptions:
     st.subheader("Source Code Description")
