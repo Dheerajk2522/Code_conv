@@ -77,6 +77,8 @@ def model1(source_language, target_language, source_code, code_mappings):
 
     prompt = generate_prompt(source_language, target_language, source_code)
     output_code = llm(prompt)
+    if "```" in output_code: 
+        output_code=output_code.split("```java")[1].split("```")[0]
     generated_code = extract_target_language_code(output_code, target_language)
     target_description = generate_code_description(target_language, generated_code)
     return generated_code, source_description, target_description
@@ -88,12 +90,10 @@ def model2(source_language, target_language, source_code):
     llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=2000, timeout=300)
     
     prompt = generate_prompt(source_language, target_language, source_code)
-    # print(prompt)
     output_code = llm(prompt)
     if "```" in output_code: 
         output_code=output_code.split("```java")[1].split("```")[0]
     generated_code = extract_target_language_code(output_code, target_language)
-
     target_description = generate_code_description(target_language, generated_code)
     return generated_code, target_description, source_description
 
@@ -106,6 +106,8 @@ def model3(source_language, target_language, source_code):
 
     prompt = generate_prompt(source_language, target_language, source_code)
     output_code = llm(prompt)
+    if "```" in output_code: 
+        output_code=output_code.split("```java")[1].split("```")[0]
     cleaned_output_code = remove_code_fences(output_code)
     cleaned_code = clean_output_code(cleaned_output_code)
 
