@@ -45,15 +45,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-import streamlit as st
-from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
-import os
-from dotenv import load_dotenv
-import re 
-
-# Load environment variables from .env
-load_dotenv()
-
 @st.cache_data
 # Function to read the COBOL to Java mappings from a file
 def load_code_mappings(file_path):
