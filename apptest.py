@@ -152,12 +152,6 @@ def extract_target_language_code(output_code, target_language):
     # If no matching section is found, return the original output
     return output_code.strip() 
 
-# Set page layout to wide mode
-st.set_page_config(layout="wide")
-
-# Title and logos
-st.markdown("<h1 style='text-align: center;'>Code Conversion</h1>", unsafe_allow_html=True)
-
 # Supported languages
 languages = ["COBOL", "Java", "Python", "C++", "C#", "JavaScript"]
 languages1 = ["Java", "Python", "C++", "C#", "JavaScript"]
