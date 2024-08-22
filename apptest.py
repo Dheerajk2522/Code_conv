@@ -95,7 +95,7 @@ def model2(source_language, target_language, source_code):
         output_code=output_code.split("```java")[1].split("```")[0]
     generated_code = extract_target_language_code(output_code, target_language)
     target_description = generate_code_description(target_language, generated_code)
-    return generated_code, target_description, source_description
+    return generated_code, source_description, target_description
 
 
 def model3(source_language, target_language, source_code):
@@ -112,7 +112,7 @@ def model3(source_language, target_language, source_code):
     cleaned_code = clean_output_code(cleaned_output_code)
 
     target_description = generate_code_description(target_language, cleaned_code)
-    return cleaned_code, target_description, source_description
+    return cleaned_code, source_description, target_description
 
 # Function to generate prompt
 def generate_prompt(source_language, target_language, source_code):
