@@ -1,4 +1,4 @@
-/* .st-emotion-cache-18ni7ap {
+.st-emotion-cache-18ni7ap {
     position: fixed;
     top: 0px;
     left: 0px;
@@ -18,46 +18,21 @@
     inset: 0px;
     color-scheme: light;
     overflow: hidden;
-} */
-
-/* .st-emotion-cache-1jicfl2 {
+}
+.st-emotion-cache-1jicfl2 {
     padding-left: 1rem;
     padding-right: 1rem;
     margin-top: -150px;
-} */
+}
 
-/* .st-emotion-cache-uzeiqp img {
+.st-emotion-cache-uzeiqp img {
     max-width: 100%;
     width: 400px;
     margin-top: 50px;
   
-} */
-
-
+}
 .st-emotion-cache-1whx7iy p {
     font-size: 16px;
     font-weight: 600;
     color: black;
 }
-
-
-
-.fixed-header {
-    display: flex;
-    align-items: center;
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-bottom: 1px solid #dee2e6;
-}
- 
-.logo {
-    height: 50px;
-    margin-left : 450px;
-}
- 
-.fixed-header h1 {
-    margin: 0;
-    font-size: 38px;
-    color: #333;
-}
- 
