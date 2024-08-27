@@ -1,5 +1,5 @@
-.st-emotion-cache-18ni7ap {
-    /* position: fixed; */
+/* .st-emotion-cache-18ni7ap {
+    position: fixed;
     top: 0px;
     left: 0px;
     right: 0px;
@@ -35,4 +35,26 @@
     font-size: 16px;
     font-weight: 600;
     color: black;
+} */
+
+
+
+.fixed-header {
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-bottom: 1px solid #dee2e6;
 }
+ 
+.logo {
+    height: 50px;
+    margin-left : 450px;
+}
+ 
+.fixed-header h1 {
+    margin: 0;
+    font-size: 38px;
+    color: #333;
+}
+ 
