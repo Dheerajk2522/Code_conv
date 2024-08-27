@@ -32,7 +32,7 @@ st.markdown(
         div[data-testid="stVerticalBlock"] div:has(div.fixed-header) {
             position: sticky;
             top: 0; /* Stick to top edge */
-         
+            background-color:rgb(38 39 48 / 0%)          
             z-index: 999;
             text-align: center;
         }
