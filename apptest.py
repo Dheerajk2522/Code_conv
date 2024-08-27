@@ -2,6 +2,7 @@ import streamlit as st
 from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
 import re 
 import os
+import base64
 
 st.set_page_config(layout="wide")
 
@@ -13,9 +14,7 @@ hide_st_style = """
             </style>
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
-header = st.container()
-header.title("Code Conversion")
-header.write("""<div class='fixed-header'/>""", unsafe_allow_html=True)
+
 
 def load_css():
     with open(r"static/styles.css", "r") as f:
@@ -44,6 +43,24 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+####Header and logo
+def img_to_base64(img_path):
+    with open(img_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode()
+
+#  Path to your image
+img_path = "CC_logo.png"
+img_base64 = img_to_base64(img_path)
+ 
+# Create header container
+header = st.container()
+header.write(f"""
+    <div class='fixed-header'>
+        <img src="data:image/png;base64,{img_base64}" class="logo">
+
+    </div>
+""", unsafe_allow_html=True)
 
 @st.cache_data
 # Function to read the COBOL to Java mappings from a file
