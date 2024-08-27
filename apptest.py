@@ -50,7 +50,7 @@ def img_to_base64(img_path):
         return base64.b64encode(img_file.read()).decode()
 
 #  Path to your image
-img_path = "CC_logo.png"
+img_path = "static/CC_logo.png"
 img_base64 = img_to_base64(img_path)
  
 # Create header container
