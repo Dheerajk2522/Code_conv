@@ -44,23 +44,23 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-####Header and logo
-def img_to_base64(img_path):
-    with open(img_path, "rb") as img_file:
-        return base64.b64encode(img_file.read()).decode()
+# ####Header and logo
+# def img_to_base64(img_path):
+#     with open(img_path, "rb") as img_file:
+#         return base64.b64encode(img_file.read()).decode()
 
-#  Path to your image
-img_path = "static/CC_logo.png"
-img_base64 = img_to_base64(img_path)
+# #  Path to your image
+# img_path = "static/CC_logo.png"
+# img_base64 = img_to_base64(img_path)
  
-# Create header container
-header = st.container()
-header.write(f"""
-    <div class='fixed-header'>
-        <img src="data:image/png;base64,{img_base64}" class="logo">
+# # Create header container
+# header = st.container()
+# header.write(f"""
+#     <div class='fixed-header'>
+#         <img src="data:image/png;base64,{img_base64}" class="logo">
 
-    </div>
-""", unsafe_allow_html=True)
+#     </div>
+# """, unsafe_allow_html=True)
 
 @st.cache_data
 # Function to read the COBOL to Java mappings from a file
