@@ -78,7 +78,52 @@ def generate_code_description(language, code):
     huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
     llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=1024, timeout=300)
     
-    prompt = f"Analyze the following {language} code and provide a concise bullet point description of its main features and functionality:\n\n{code}\n\nBullet point description:"
+    prompt = f"""
+    Analyze the following {language} code and provide a detailed description covering the following aspects:
+
+    1. Code Overview:
+       - Briefly summarize what the code does in 2-3 sentences.
+
+    2. Required Packages:
+       - List all the packages or libraries that need to be installed to run this code.
+       - For each package, provide a brief explanation of its purpose in this context.
+
+    3. Major Features:
+       - Identify and explain the main features or functionalities implemented in the code.
+       - Highlight any important algorithms, data structures, or design patterns used.
+
+    4. Code Structure:
+       - Describe the overall structure of the code (e.g., classes, functions, modules).
+       - Explain how different parts of the code interact with each other.
+
+    5. Key Components:
+       - List and briefly explain the most important variables, functions, or classes in the code.
+       - Highlight any critical sections of the code that are essential to its functionality.
+
+    6. Input/Output:
+       - Describe what inputs the code expects and in what format.
+       - Explain what outputs the code produces and how they are presented.
+
+    7. Error Handling:
+       - Mention any error handling or exception management implemented in the code.
+
+    8. Potential Use Cases:
+       - Suggest 2-3 practical applications or scenarios where this code could be useful.
+
+    9. Limitations or Considerations:
+       - Mention any limitations of the current implementation or important considerations for users.
+
+    10. Improvement Suggestions:
+        - Provide 1-2 suggestions for how the code could be improved or extended.
+
+    Please format your response with clear headings and bullet points for each section to enhance readability.
+
+    Code to analyze:
+
+    {code}
+
+    Comprehensive Code Description:
+    """
     
     description = llm(prompt)
     return description.strip()
