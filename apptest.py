@@ -39,6 +39,11 @@ st.markdown(
         .fixed-header {
             border-bottom: 0;
         }
+        .st-emotion-cache-1jicfl2 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        margin-top: -100px;
+    }
     </style>
     """,
     unsafe_allow_html=True
