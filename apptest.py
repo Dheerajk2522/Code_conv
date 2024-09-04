@@ -69,69 +69,86 @@ st.markdown(
 
 @st.cache_data
 # Function to read the COBOL to Java mappings from a file
-def load_code_mappings(file_path):
-    with open(file_path, 'r') as file:
-        content = file.read()
+# def load_code_mappings(file_path):
+#     with open(file_path, 'r') as file:
+#         content = file.read()
     
-    cobol_java_pairs = re.findall(r"COBOL:(.*?)JAVA:(.*?)(?=\nCOBOL:|\Z)", content, re.DOTALL)
-    code_mappings = {cobol.strip(): java.strip() for cobol, java in cobol_java_pairs}
-    return code_mappings
+#     cobol_java_pairs = re.findall(r"COBOL:(.*?)JAVA:(.*?)(?=\nCOBOL:|\Z)", content, re.DOTALL)
+#     code_mappings = {cobol.strip(): java.strip() for cobol, java in cobol_java_pairs}
+#     return code_mappings
+def load_code_mappings(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            content = file.read()
+        cobol_java_pairs = re.findall(r"COBOL:(.*?)JAVA:(.*?)(?=\nCOBOL:|\Z)", content, re.DOTALL)
+        code_mappings = {cobol.strip(): java.strip() for cobol, java in cobol_java_pairs}
+        return code_mappings
+    except FileNotFoundError:
+        st.warning("Mapping file not found.")
+        return {}
 
 def generate_code_description(language, code):
-    print("Generating Code",'\n\n')
-    repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
-    huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
-    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=1024, timeout=300)
+    try:
+            
+        print("Generating Code",'\n\n')
+        repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
+        huggingfacehub_api_token = os.getenv("HUGGINGFACE_API_TOKEN")
+        llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=1024, timeout=300)
+        
+        prompt = f"""
+        Analyze the following {language} code and provide a detailed description covering the following aspects:
+
+        1. Code Overview:
+        - Briefly summarize what the code does in 2-3 sentences.
+
+        2. Required Packages:
+        - List all the packages or libraries that need to be installed to run this code.
+        - For each package, provide a brief explanation of its purpose in this context.
+
+        3. Major Features:
+        - Identify and explain the main features or functionalities implemented in the code.
+        - Highlight any important algorithms, data structures, or design patterns used.
+
+        4. Code Structure:
+        - Describe the overall structure of the code (e.g., classes, functions, modules).
+        - Explain how different parts of the code interact with each other.
+
+        5. Key Components:
+        - List and briefly explain the most important variables, functions, or classes in the code.
+        - Highlight any critical sections of the code that are essential to its functionality.
+
+        6. Input/Output:
+        - Describe what inputs the code expects and in what format.
+        - Explain what outputs the code produces and how they are presented.
+
+        7. Error Handling:
+        - Mention any error handling or exception management implemented in the code.
+
+        8. Potential Use Cases:
+        - Suggest 2-3 practical applications or scenarios where this code could be useful.
+
+        9. Limitations or Considerations:
+        - Mention any limitations of the current implementation or important considerations for users.
+
+        10. Improvement Suggestions:
+            - Provide 1-2 suggestions for how the code could be improved or extended.
+
+        Please format your response with clear headings and bullet points for each section to enhance readability.
+
+        Code to analyze:
+
+        {code}
+
+        Comprehensive Code Description:
+        """
     
-    prompt = f"""
-    Analyze the following {language} code and provide a detailed description covering the following aspects:
-
-    1. Code Overview:
-       - Briefly summarize what the code does in 2-3 sentences.
-
-    2. Required Packages:
-       - List all the packages or libraries that need to be installed to run this code.
-       - For each package, provide a brief explanation of its purpose in this context.
-
-    3. Major Features:
-       - Identify and explain the main features or functionalities implemented in the code.
-       - Highlight any important algorithms, data structures, or design patterns used.
-
-    4. Code Structure:
-       - Describe the overall structure of the code (e.g., classes, functions, modules).
-       - Explain how different parts of the code interact with each other.
-
-    5. Key Components:
-       - List and briefly explain the most important variables, functions, or classes in the code.
-       - Highlight any critical sections of the code that are essential to its functionality.
-
-    6. Input/Output:
-       - Describe what inputs the code expects and in what format.
-       - Explain what outputs the code produces and how they are presented.
-
-    7. Error Handling:
-       - Mention any error handling or exception management implemented in the code.
-
-    8. Potential Use Cases:
-       - Suggest 2-3 practical applications or scenarios where this code could be useful.
-
-    9. Limitations or Considerations:
-       - Mention any limitations of the current implementation or important considerations for users.
-
-    10. Improvement Suggestions:
-        - Provide 1-2 suggestions for how the code could be improved or extended.
-
-    Please format your response with clear headings and bullet points for each section to enhance readability.
-
-    Code to analyze:
-
-    {code}
-
-    Comprehensive Code Description:
-    """
-    
-    description = llm(prompt)
-    return description.strip()
+        description = llm(prompt)
+        if not description:
+            st.warning("Received empty response from the language model.")
+        return description.strip()
+    except Exception as e:
+        st.error(f"Error in generating code description: {e}")
+        return ""
 
 def compare_and_score_models(source_code, source_description, generated_codes, target_descriptions):
     scores = [0] * 3
@@ -167,24 +184,24 @@ def compare_and_score_models(source_code, source_description, generated_codes, t
         elif cobol_matches > 0:
             explanations.append(f"Model {i+1} retained some COBOL syntax, which may indicate incomplete translation.")
     
-    # # Analyze code structure
-    # for i, code in enumerate(generated_codes):
-    #     if re.search(r'public\s+class', code) and re.search(r'public\s+static\s+void\s+main', code):
-    #         scores[i] += 1
-    #         explanations.append(f"Model {i+1} generated a proper Java class structure with a main method.")
+    # Analyze code structure
+    for i, code in enumerate(generated_codes):
+        if re.search(r'public\s+class', code) and re.search(r'public\s+static\s+void\s+main', code):
+            scores[i] += 1
+            explanations.append(f"Model {i+1} generated a proper Java class structure with a main method.")
     
-    # # Check for exception handling
-    # for i, code in enumerate(generated_codes):
-    #     if 'try' in code and 'catch' in code:
-    #         scores[i] += 1
-    #         explanations.append(f"Model {i+1} implemented exception handling.")
+    # Check for exception handling
+    for i, code in enumerate(generated_codes):
+        if 'try' in code and 'catch' in code:
+            scores[i] += 1
+            explanations.append(f"Model {i+1} implemented exception handling.")
     
-    # # Analyze variable naming conventions
-    # for i, code in enumerate(generated_codes):
-    #     camelCase = len(re.findall(r'\b[a-z]+[A-Z][a-zA-Z]*\b', code))
-    #     if camelCase > 5:
-    #         scores[i] += 1
-    #         explanations.append(f"Model {i+1} used proper Java camelCase naming conventions.")
+    # Analyze variable naming conventions
+    for i, code in enumerate(generated_codes):
+        camelCase = len(re.findall(r'\b[a-z]+[A-Z][a-zA-Z]*\b', code))
+        if camelCase > 5:
+            scores[i] += 1
+            explanations.append(f"Model {i+1} used proper Java camelCase naming conventions.")
     
     best_model = scores.index(max(scores)) + 1
     
@@ -192,60 +209,66 @@ def compare_and_score_models(source_code, source_description, generated_codes, t
 
 # LLM function to provide detailed analysis
 def llm_analyze_comparison(source_code, source_description, generated_codes, target_descriptions, best_model, scores, explanations):
-    repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
-    # huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
-    huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
-    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=2048, timeout=300)
-    
-    prompt = f"""
-    As an expert in COBOL to Java conversion and software engineering, provide a detailed analysis of the best performing model for COBOL to Java conversion based on the following comparison results:
+    try:
+        repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
+        # huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
+        huggingfacehub_api_token = os.getenv("HUGGINGFACE_API_TOKEN")
+        llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=4096, timeout=600)
 
-    Source COBOL code snippet:
-    {source_code[:100]}...
+        prompt = f"""
+        As an expert in COBOL to Java conversion and software engineering, provide a detailed analysis of the best performing model for COBOL to Java conversion based on the following comparison results:
 
-    Source code description:
-    {source_description[:100]}...
+        Source COBOL code snippet:
+        {source_code[:200]}...
 
-    Comparison results:
-    Best Model (according to scores): Model {best_model}
-    Scores: {scores}
-    Explanations: {explanations}
+        Source code description:
+        {source_description[:200]}...
 
-    Please provide a comprehensive analysis of the best model (Model {best_model}) in the following format:
+        Comparison results:
+        Best Model (according to scores): Model {best_model}
+        Scores: {scores}
+        Explanations: {explanations}
 
-    1. Best Model Overview:
-       - Confirm that Model {best_model} is indeed the best performer.
-       - State its overall score and how it compares to the other models.
+        Please provide a comprehensive analysis of the best model (Model {best_model}) in the following format:
 
-    2. Key Strengths of Model {best_model}:
-       - Provide a bullet-point list of the model's main strengths, as indicated by the comparison results.
-       - For each strength, explain its significance in the context of COBOL to Java conversion.
+        1. Best Model Overview:
+            - Confirm that Model {best_model} is indeed the best performer.
+            - State its overall score and how it compares to the other models.
 
-    3. Specific Advantages:
-       - List and elaborate on any specific advantages Model {best_model} demonstrated, such as:
-         * Code conciseness or comprehensiveness
-         * Quality of code explanations
-         * Correct translation of COBOL constructs
-         * Proper Java structure and conventions
-         * Exception handling
-         * Naming conventions
-       - For each advantage, provide a brief explanation of why it's important for effective COBOL to Java conversion.
+        2. Key Strengths of Model {best_model}:
+            - Provide a bullet-point list of the model's main strengths, as indicated by the comparison results.
+            - For each strength, explain its significance in the context of COBOL to Java conversion.
 
-    4. Comparative Analysis:
-       - In bullet points, highlight how Model {best_model} outperformed the other models in specific areas.
-       - Mention any unique features or approaches that set Model {best_model} apart.
+        3. Specific Advantages:
+            - List and elaborate on any specific advantages Model {best_model} demonstrated, such as:
+                * Code conciseness or comprehensiveness
+                * Quality of code explanations
+                * Correct translation of COBOL constructs
+                * Proper Java structure and conventions
+                * Exception handling
+                * Naming conventions
+            - For each advantage, provide a brief explanation of why it's important for effective COBOL to Java conversion.
 
-    5. Potential Areas for Improvement:
-       - If applicable, list any areas where Model {best_model} could still improve, based on the comparison results.
+        4. Comparative Analysis:
+            - In bullet points, highlight how Model {best_model} outperformed the other models in specific areas.
+            - Mention any unique features or approaches that set Model {best_model} apart.
 
-    6. Conclusion:
-       - Summarize why Model {best_model} is the best choice for COBOL to Java conversion based on this analysis.
+        5. Potential Areas for Improvement:
+            - If applicable, list any areas where Model {best_model} could still improve, based on the comparison results.
 
-    Please ensure your analysis is detailed, using bullet points for clarity, and focuses solely on the information provided by the 'compare_and_score_models' function. Provide concrete examples from the comparison results where possible.
-    """
-    
-    response = llm(prompt)
-    return response
+        6. Conclusion:
+            - Summarize why Model {best_model} is the best choice for COBOL to Java conversion based on this analysis.
+
+        Please ensure your analysis is detailed, using bullet points for clarity, and focuses solely on the information provided by the 'compare_and_score_models' function. Provide concrete examples from the comparison results where possible.
+        """
+
+        response = llm(prompt)
+        if not response:
+            st.warning("Received empty response from the LLM for analysis.")
+        return response
+    except Exception as e:
+        st.error(f"Error during LLM comparison analysis: {e}")
+        return ""
 
 
 
