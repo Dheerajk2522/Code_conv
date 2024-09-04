@@ -16,10 +16,18 @@ hide_st_style = """
 st.markdown(hide_st_style, unsafe_allow_html=True)
 
 
+# def load_css():
+#     with open(r"static/styles.css", "r") as f:
+#         css = f"<style>{f.read()}</style>"
+#         st.markdown(css, unsafe_allow_html=True)
+# load_css()
 def load_css():
-    with open(r"static/styles.css", "r") as f:
-        css = f"<style>{f.read()}</style>"
-        st.markdown(css, unsafe_allow_html=True)
+    try:
+        with open(r"static/styles.css", "r") as f:
+            css = f"<style>{f.read()}</style>"
+            st.markdown(css, unsafe_allow_html=True)
+    except FileNotFoundError:
+        st.warning("CSS file not found.")
 load_css()
 
 
@@ -85,8 +93,7 @@ def load_code_mappings(file_path):
         return code_mappings
     except FileNotFoundError:
         st.warning("Mapping file not found.")
-        return {}
-
+        return {}       
 def generate_code_description(language, code):
     try:
             
@@ -435,14 +442,11 @@ if st.button("Convert"):
             
 
     with st.expander("Model Comparsion"):
-        
         st.subheader("Comprehensive Analysis")
         best_model, scores, explanations = compare_and_score_models(source_code, source_description, generated_codes, target_descriptions)
-      
         with st.spinner("Performing detailed analysis of model outputs..."):
             llm_analysis = llm_analyze_comparison(source_code, source_description, generated_codes, target_descriptions, best_model, scores, explanations)
         st.markdown(llm_analysis)
-    
 
 
 
