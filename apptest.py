@@ -167,24 +167,24 @@ def compare_and_score_models(source_code, source_description, generated_codes, t
         elif cobol_matches > 0:
             explanations.append(f"Model {i+1} retained some COBOL syntax, which may indicate incomplete translation.")
     
-    # Analyze code structure
-    for i, code in enumerate(generated_codes):
-        if re.search(r'public\s+class', code) and re.search(r'public\s+static\s+void\s+main', code):
-            scores[i] += 1
-            explanations.append(f"Model {i+1} generated a proper Java class structure with a main method.")
+    # # Analyze code structure
+    # for i, code in enumerate(generated_codes):
+    #     if re.search(r'public\s+class', code) and re.search(r'public\s+static\s+void\s+main', code):
+    #         scores[i] += 1
+    #         explanations.append(f"Model {i+1} generated a proper Java class structure with a main method.")
     
-    # Check for exception handling
-    for i, code in enumerate(generated_codes):
-        if 'try' in code and 'catch' in code:
-            scores[i] += 1
-            explanations.append(f"Model {i+1} implemented exception handling.")
+    # # Check for exception handling
+    # for i, code in enumerate(generated_codes):
+    #     if 'try' in code and 'catch' in code:
+    #         scores[i] += 1
+    #         explanations.append(f"Model {i+1} implemented exception handling.")
     
-    # Analyze variable naming conventions
-    for i, code in enumerate(generated_codes):
-        camelCase = len(re.findall(r'\b[a-z]+[A-Z][a-zA-Z]*\b', code))
-        if camelCase > 5:
-            scores[i] += 1
-            explanations.append(f"Model {i+1} used proper Java camelCase naming conventions.")
+    # # Analyze variable naming conventions
+    # for i, code in enumerate(generated_codes):
+    #     camelCase = len(re.findall(r'\b[a-z]+[A-Z][a-zA-Z]*\b', code))
+    #     if camelCase > 5:
+    #         scores[i] += 1
+    #         explanations.append(f"Model {i+1} used proper Java camelCase naming conventions.")
     
     best_model = scores.index(max(scores)) + 1
     
