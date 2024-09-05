@@ -321,7 +321,8 @@ def model3(source_language, target_language, source_code):
     output_code = llm(prompt)
     cleaned_output_code = remove_code_fences(output_code)
     cleaned_code = clean_output_code(cleaned_output_code)
-    
+    if "```" in output_code: 
+        output_code=output_code.split("```java")[1].split("```")[0]
     target_description = generate_code_description(target_language, cleaned_code)
     return cleaned_code, source_description, target_description
 
