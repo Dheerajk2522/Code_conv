@@ -290,6 +290,8 @@ def model1(source_language, target_language, source_code, code_mappings):
 
     prompt = generate_prompt(source_language, target_language, source_code)
     output_code = llm(prompt)
+    if "```" in output_code: 
+        output_code=output_code.split("```java")[1].split("```")[0]
     generated_code = extract_target_language_code(output_code, target_language)
     target_description = generate_code_description(target_language, generated_code)
     return generated_code, source_description, target_description
