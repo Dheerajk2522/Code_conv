@@ -298,7 +298,7 @@ def model2(source_language, target_language, source_code):
     source_description = generate_code_description(source_language, source_code)
     repo_id = "meta-llama/Meta-Llama-3-8B-Instruct"
     huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
-    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=2000, timeout=300)
+    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=4096, timeout=300)
     
     prompt = generate_prompt(source_language, target_language, source_code)
     # print(prompt)
@@ -306,7 +306,6 @@ def model2(source_language, target_language, source_code):
     if "```" in output_code: 
         output_code=output_code.split("```java")[1].split("```")[0]
     generated_code = extract_target_language_code(output_code, target_language)
-
     target_description = generate_code_description(target_language, generated_code)
     return generated_code, target_description, source_description
 
@@ -315,13 +314,12 @@ def model3(source_language, target_language, source_code):
     source_description = generate_code_description(source_language, source_code)
     repo_id = "google/gemma-2b"
     huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
-    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=2000, timeout=300)
-
+    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=4096, timeout=300)
     prompt = generate_prompt(source_language, target_language, source_code)
     output_code = llm(prompt)
     cleaned_output_code = remove_code_fences(output_code)
     cleaned_code = clean_output_code(cleaned_output_code)
-
+    
     target_description = generate_code_description(target_language, cleaned_code)
     return cleaned_code, target_description, source_description
 
@@ -418,11 +416,11 @@ if st.button("Convert"):
                 # st.subheader("Source Code Description")
                 # st.markdown(source_desc2)
         with st.expander("Generated Code Description"):
-
             st.subheader("Generated Code Description")
             st.markdown(target_desc2)
             generated_codes.append(generated_code2)
             target_descriptions.append(target_desc2)
+
 
     with col3:
          with st.expander("Model 3"):
