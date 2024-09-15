@@ -284,7 +284,7 @@ def model1(source_language, target_language, source_code, code_mappings):
     source_description = generate_code_description(source_language, source_code)
     if source_language == "COBOL" and source_code.strip() in code_mappings:
         generated_code = code_mappings[source_code.strip()]
-    repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
+    repo_id = "mistralai/Mistral-7B-Instruct-v0.3"
     huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
     llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=4096, timeout=300)
 
