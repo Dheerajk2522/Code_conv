@@ -285,9 +285,9 @@ def model1(source_language, target_language, source_code, code_mappings):
     if source_language == "COBOL" and source_code.strip() in code_mappings:
         generated_code = code_mappings[source_code.strip()]
     
-    llm = ChatOpenAI(model='gpt-4o',api_key=st.secrets["OPENAI_API_KEY"])
+    llm2 = ChatOpenAI(model='gpt-4o',api_key=st.secrets["OPENAI_API_KEY"])
     prompt = generate_prompt(source_language, target_language, source_code)
-    output_code = llm.invoke(prompt).content
+    output_code = llm2.invoke(prompt).content
     if "```" in output_code: 
         output_code = output_code.split("```java")[1].split("```")[0]
     generated_code = extract_target_language_code(output_code, target_language)
