@@ -3,7 +3,7 @@ from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
 import re 
 import os
 import base64
-
+from langchain_community.chat_models import ChatOpenAI
 st.set_page_config(layout="wide")
 
 hide_st_style = """
@@ -284,9 +284,23 @@ def model1(source_language, target_language, source_code, code_mappings):
     source_description = generate_code_description(source_language, source_code)
     if source_language == "COBOL" and source_code.strip() in code_mappings:
         generated_code = code_mappings[source_code.strip()]
-    repo_id = "mistralai/Mistral-7B-Instruct-v0.3"
-    huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
-    llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=4096, timeout=300)
+    
+    llm = ChatOpenAI(model='gpt-4o',api_key=st.secrets["OPENAI_API_KEY"])
+    prompt = generate_prompt(source_language, target_language, source_code)
+    output_code = llm.invoke(prompt).content
+    if "```" in output_code: 
+        output_code = output_code.split("```java")[1].split("```")[0]
+    generated_code = extract_target_language_code(output_code, target_language)
+    target_description = generate_code_description(target_language, generated_code)
+    execution_result = ""
+    # if target_language.lower() == "java":
+    #     execution_result = save_and_execute_java(generated_code)
+    
+    # Generate microservices implementation
+    # microservices_implementation = generate_microservices_implementation(target_language, generated_code, source_code, generated_code)
+    # microservices_explanation = explain_microservices(microservices_implementation)
+    
+    return generated_code, source_description, target_description, execution_result
 
     prompt = generate_prompt(source_language, target_language, source_code)
     output_code = llm(prompt)
