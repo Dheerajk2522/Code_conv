@@ -3,3 +3,4 @@ langchain
 langchain_community
 huggingface_hub
 openai
+subprocess

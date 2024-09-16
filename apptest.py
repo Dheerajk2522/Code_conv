@@ -119,11 +119,7 @@ def generate_code_description(language, code, is_source=False):
         messages=[
             {"role": "system", "content": "You are a helpful assistant that analyzes and describes code."},
             {"role": "user", "content": prompt}
-        ],
-        max_tokens=1024,
-        n=1,
-        stop=None,
-        temperature=0.7,
+        ]
     )
     
     description = response.choices[0].message.content.strip()
@@ -459,8 +455,8 @@ if st.button("Convert"):
     target_descriptions = []
 
     with col1:
-        with st.expander("Model 1"):
-            st.subheader("Model 1")
+        with st.expander("Promptora Model"):
+            st.subheader("Promptora Model")
             with st.spinner("Converting code and generating descriptions..."):
                 generated_code1, source_desc1, target_desc1, execution_result1, microservices_impl1, microservices_expl1= model1(source_language, target_language, source_code, code_mappings)
                 st.code(generated_code1, language=target_language.lower())
