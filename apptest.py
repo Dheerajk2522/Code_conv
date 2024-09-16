@@ -5,6 +5,8 @@ import os
 import base64
 from langchain_community.chat_models import ChatOpenAI
 import openai
+import tempfile
+import subprocess
 st.set_page_config(layout="wide")
 
 hide_st_style = """
@@ -16,12 +18,6 @@ hide_st_style = """
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
 
-
-# def load_css():
-#     with open(r"static/styles.css", "r") as f:
-#         css = f"<style>{f.read()}</style>"
-#         st.markdown(css, unsafe_allow_html=True)
-# load_css()
 def load_css():
     try:
         with open(r"static/styles.css", "r") as f:
@@ -58,33 +54,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ####Header and logo
-# def img_to_base64(img_path):
-#     with open(img_path, "rb") as img_file:
-#         return base64.b64encode(img_file.read()).decode()
-
-# #  Path to your image
-# img_path = "static/CC_logo.png"
-# img_base64 = img_to_base64(img_path)
- 
-# # Create header container
-# header = st.container()
-# header.write(f"""
-#     <div class='fixed-header'>
-#         <img src="data:image/png;base64,{img_base64}" class="logo">
-
-#     </div>
-# """, unsafe_allow_html=True)
-
 @st.cache_data
-# Function to read the COBOL to Java mappings from a file
-# def load_code_mappings(file_path):
-#     with open(file_path, 'r') as file:
-#         content = file.read()
-    
-#     cobol_java_pairs = re.findall(r"COBOL:(.*?)JAVA:(.*?)(?=\nCOBOL:|\Z)", content, re.DOTALL)
-#     code_mappings = {cobol.strip(): java.strip() for cobol, java in cobol_java_pairs}
-#     return code_mappings
 def load_code_mappings(file_path):
     try:
         with open(file_path, 'r') as file:
@@ -158,151 +128,236 @@ def generate_code_description(language, code, is_source=False):
     
     description = response.choices[0].message.content.strip()
     return description
+def extract_class_name(java_code):
+    match = re.search(r'public\s+class\s+(\w+)', java_code)
+    if match:
+        return match.group(1)
+    return "GeneratedCode"
 
-def compare_and_score_models(source_code, source_description, generated_codes, target_descriptions):
-    scores = [0] * 3
-    explanations = []
-    
-    # Compare code length and complexity
-    code_lengths = [len(code.split('\n')) for code in generated_codes]
-    avg_length = sum(code_lengths) / 3
-    for i, length in enumerate(code_lengths):
-        if length < avg_length * 0.8:
-            scores[i] += 1
-            explanations.append(f"Model {i+1} generated more concise code.")
-        elif length > avg_length * 1.2:
-            explanations.append(f"Model {i+1} generated longer code, which might be more comprehensive or less efficient.")
-    
-    # Compare explanation quality
-    explanation_lengths = [len(desc.split()) for desc in target_descriptions]
-    for i, length in enumerate(explanation_lengths):
-        if length > 50:
-            scores[i] += 1
-            explanations.append(f"Model {i+1} provided a more detailed explanation.")
-    
-    # Check for specific COBOL to target language patterns
-    cobol_patterns = ['PERFORM', 'MOVE', 'COMPUTE']
-    java_patterns = ['for', 'while', '=', 'Math.']
-    
-    for i, code in enumerate(generated_codes):
-        java_matches = sum(1 for pattern in java_patterns if pattern in code)
-        cobol_matches = sum(1 for pattern in cobol_patterns if pattern in code)
-        if java_matches >= 2 and cobol_matches == 0:
-            scores[i] += 1
-            explanations.append(f"Model {i+1} correctly translated common COBOL constructs to Java.")
-        elif cobol_matches > 0:
-            explanations.append(f"Model {i+1} retained some COBOL syntax, which may indicate incomplete translation.")
-    
-    # Analyze code structure
-    for i, code in enumerate(generated_codes):
-        if re.search(r'public\s+class', code) and re.search(r'public\s+static\s+void\s+main', code):
-            scores[i] += 1
-            explanations.append(f"Model {i+1} generated a proper Java class structure with a main method.")
-    
-    # Check for exception handling
-    for i, code in enumerate(generated_codes):
-        if 'try' in code and 'catch' in code:
-            scores[i] += 1
-            explanations.append(f"Model {i+1} implemented exception handling.")
-    
-    # Analyze variable naming conventions
-    for i, code in enumerate(generated_codes):
-        camelCase = len(re.findall(r'\b[a-z]+[A-Z][a-zA-Z]*\b', code))
-        if camelCase > 5:
-            scores[i] += 1
-            explanations.append(f"Model {i+1} used proper Java camelCase naming conventions.")
-    
-    best_model = scores.index(max(scores)) + 1
-    
-    return best_model, scores, explanations
+def save_and_execute_java(java_code):
+    class_name = extract_class_name(java_code)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Save the Java code to a temporary file with the correct class name
+        java_file_path = os.path.join(tmpdir, f"{class_name}.java")
+        with open(java_file_path, "w") as java_file:
+            java_file.write(java_code)
+        
+        # Compile the Java code
+        compile_command = ["javac", java_file_path]
+        compile_process = subprocess.run(compile_command, capture_output=True, text=True)
+        
+        if compile_process.returncode != 0:
+            return f"Compilation Error:\n{compile_process.stderr}"
+        st.write("Compilation successful")
+        return compile_process.stdout
 
-# LLM function to provide detailed analysis
-def llm_analyze_comparison(source_code, source_description, generated_codes, target_descriptions, best_model, scores, explanations):
-    try:
-        repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
-        # huggingfacehub_api_token = st.secrets["HUGGINGFACE_API_TOKEN"]
-        huggingfacehub_api_token = os.getenv("HUGGINGFACE_API_TOKEN")
-        llm = HuggingFaceEndpoint(repo_id=repo_id, temperature=0.1, huggingfacehub_api_token=huggingfacehub_api_token, max_new_tokens=4096, timeout=600)
-
+def compare_models(source_code, source_description, generated_codes, target_descriptions):
+    comparisons = []
+    for i in range(3):
         prompt = f"""
-        As an expert in COBOL to Java conversion and software engineering, provide a detailed analysis of the best performing model for COBOL to Java conversion based on the following comparison results:
+        As an expert in COBOL to Java conversion, compare the following Java code conversion based on the original COBOL code:
 
-        Source COBOL code snippet:
-        {source_code[:200]}...
+        Original COBOL code:
+        {source_code}
 
         Source code description:
-        {source_description[:200]}...
+        {source_description}
 
-        Comparison results:
-        Best Model (according to scores): Model {best_model}
-        Scores: {scores}
-        Explanations: {explanations}
+        Model {i+1} Java code:
+        {generated_codes[i]}
 
-        Please provide a comprehensive analysis of the best model (Model {best_model}) in the following format:
+        Model {i+1} description:
+        {target_descriptions[i]}
 
-        1. Best Model Overview:
-            - Confirm that Model {best_model} is indeed the best performer.
-            - State its overall score and how it compares to the other models.
+        Please analyze this conversion based on the following criteria:
+        1. Accuracy of translation
+        2. Code structure and organization
+        3. Java best practices and conventions
+        4. Handling of COBOL-specific constructs
+        5. Time Complexity
+        6. Space Complexity
+        7. Code efficiency
 
-        2. Key Strengths of Model {best_model}:
-            - Provide a bullet-point list of the model's main strengths, as indicated by the comparison results.
-            - For each strength, explain its significance in the context of COBOL to Java conversion.
+        Provide a detailed analysis of its strengths and weaknesses, paying special attention to time complexity, space complexity, and code efficiency.
 
-        3. Specific Advantages:
-            - List and elaborate on any specific advantages Model {best_model} demonstrated, such as:
-                * Code conciseness or comprehensiveness
-                * Quality of code explanations
-                * Correct translation of COBOL constructs
-                * Proper Java structure and conventions
-                * Exception handling
-                * Naming conventions
-            - For each advantage, provide a brief explanation of why it's important for effective COBOL to Java conversion.
-
-        4. Comparative Analysis:
-            - In bullet points, highlight how Model {best_model} outperformed the other models in specific areas.
-            - Mention any unique features or approaches that set Model {best_model} apart.
-
-        5. Potential Areas for Improvement:
-            - If applicable, list any areas where Model {best_model} could still improve, based on the comparison results.
-
-        6. Conclusion:
-            - Summarize why Model {best_model} is the best choice for COBOL to Java conversion based on this analysis.
-
-        Please ensure your analysis is detailed, using bullet points for clarity, and focuses solely on the information provided by the 'compare_and_score_models' function. Provide concrete examples from the comparison results where possible.
+        Format your response as follows:
+        Model {i+1} Analysis:
+        [Your analysis here, including specific comments on time complexity, space complexity, and code efficiency]
         """
 
-        response = llm(prompt)
-        if not response:
-            st.warning("Received empty response from the LLM for analysis.")
-        return response
-    except Exception as e:
-        st.error(f"Error during LLM comparison analysis: {e}")
-        return ""
+        response = openai.OpenAI().chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are an expert in COBOL to Java conversion. Analyze the given conversion."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        comparisons.append(response.choices[0].message.content.strip())
+    
+    # Combine individual comparisons
+    combined_comparison = "\n\n".join(comparisons)
+    
+    # Final comparison to determine the best model
+    final_prompt = f"""
+    Based on the following analyses of three COBOL to Java conversion models:
 
+    {combined_comparison}
 
+    Please determine which model performed the best overall and explain why.
 
-# Define functions for each model code
+    Format your response as follows:
+    Best Model:
+    [State which model is best]
+
+    Reason for Selection:
+    [Explain why this model is the best, considering all criteria including time complexity, space complexity, and code efficiency]
+    """
+
+    final_response = openai.OpenAI().chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are an expert in COBOL to Java conversion. Determine the best model based on the given analyses."},
+            {"role": "user", "content": final_prompt}
+        ]
+    )
+    
+    return combined_comparison + "\n\n" + final_response.choices[0].message.content.strip()
+
+def explain_comparison(comparison_result):
+    
+    prompt = f"""
+    Based on the following comparison of three COBOL to Java conversion models:
+
+    {comparison_result}
+
+    Please provide a comprehensive analysis of the comparison results in the following format:
+
+    1. Overview:
+        - Summarize the key findings from the comparison.
+        - Confirm which model was determined to be the best performer.
+
+    2. Detailed Analysis:
+        - For each model, provide a bullet-point list of its main strengths and weaknesses, including:
+          * Accuracy of translation
+          * Code structure and organization
+          * Java best practices and conventions
+          * Handling of COBOL-specific constructs
+          * Time Complexity
+          * Space Complexity
+          * Code efficiency
+        - Explain the significance of these points in the context of COBOL to Java conversion.
+
+    3. Best Model Justification:
+        - Elaborate on why the chosen model is considered the best.
+        - Highlight the specific advantages that set it apart from the other models, particularly in terms of time complexity, space complexity, and code efficiency.
+
+    4. Comparative Insights:
+        - Discuss any notable differences between the models' approaches or outputs, especially regarding algorithmic efficiency.
+        - Identify any unique features or techniques employed by each model that impact performance or resource usage.
+
+    5. Potential Improvements:
+        - Suggest areas where each model, including the best one, could potentially improve, focusing on optimizing time complexity, space complexity, and overall code efficiency.
+
+    6. Conclusion:
+        - Summarize why the best model is the most suitable choice for COBOL to Java conversion based on this analysis, emphasizing its balance of accuracy, efficiency, and best practices.
+        - Provide any final thoughts or recommendations for using or further developing these conversion models to enhance their performance and resource utilization.
+
+    Please ensure your analysis is detailed and focuses on the information provided in the comparison results.
+    Use bullet points for clarity where appropriate and provide specific examples or metrics when discussing time complexity, space complexity, and code efficiency.
+    """
+
+    response = openai.OpenAI().chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant that analyzes code conversion models."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    analysis = response.choices[0].message.content.strip()
+    return analysis
+
+def generate_microservices_implementation(source_language, target_language, source_code, generated_code):
+    prompt = f"""
+    Analyze the following {source_language} code and its corresponding {target_language} conversion:
+
+    {source_language} Code:
+    {source_code}
+
+    {target_language} Conversion:
+    {generated_code}
+
+    Based on this analysis, create a microservices implementation in {target_language} that:
+
+    1. Identifies and extracts the key functionalities from the original {source_language} code.
+    2. Converts these functionalities into separate, independent microservices in {target_language}.
+    3. Defines appropriate REST endpoints for each microservice.
+    4. Ensures proper communication and data flow between the microservices.
+    5. Adheres to microservices best practices and design patterns.
+
+    Please provide:
+    1. A list of the identified key functionalities from the {source_language} code.
+    2. The {target_language} code for each microservice, including:
+       - Service definitions
+       - REST endpoints
+       - Any necessary data models
+       - Inter-service communication methods
+    3. A brief explanation of how the microservices interact and the overall architecture.
+    4. Any necessary configuration or setup code.
+
+    You have the freedom to choose the most appropriate microservices framework or approach for {target_language}, based on the specific requirements of the converted code.
+    """
+
+    response = openai.OpenAI().chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": f"You are an expert in converting {source_language} to {target_language} and implementing microservices architectures."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    
+    return response.choices[0].message.content.strip()
+
+def explain_microservices(microservices_implementation):
+    prompt = f"""
+    Provide a detailed explanation of the following Spring Boot microservices implementation:
+
+    {microservices_implementation}
+
+    Include:
+    1. An overview of the microservices architecture.
+    2. The purpose and functionality of each microservice.
+    3. How the microservices communicate with each other.
+    4. Any design patterns or best practices used.
+    5. Potential scalability and maintainability benefits of this approach.
+    """
+
+    response = openai.OpenAI().chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are an expert in explaining microservices architectures."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    
+    return response.choices[0].message.content.strip()
+
 def model1(source_language, target_language, source_code, code_mappings):
     source_description = generate_code_description(source_language, source_code)
     if source_language == "COBOL" and source_code.strip() in code_mappings:
         generated_code = code_mappings[source_code.strip()]
     
-    llm2 = ChatOpenAI(model='gpt-4o',api_key=st.secrets["OPENAI_API_KEY"])
+    llm = ChatOpenAI(model='gpt-4o')
     prompt = generate_prompt(source_language, target_language, source_code)
-    output_code = llm2.invoke(prompt).content
+    output_code = llm.invoke(prompt).content
     if "```" in output_code: 
         output_code = output_code.split("```java")[1].split("```")[0]
     generated_code = extract_target_language_code(output_code, target_language)
     target_description = generate_code_description(target_language, generated_code)
     execution_result = ""
-    # if target_language.lower() == "java":
-    #     execution_result = save_and_execute_java(generated_code)
+    microservices_implementation = generate_microservices_implementation(target_language, generated_code, source_code, generated_code)
+    microservices_explanation = explain_microservices(microservices_implementation)
     
-    # Generate microservices implementation
-    # microservices_implementation = generate_microservices_implementation(target_language, generated_code, source_code, generated_code)
-    # microservices_explanation = explain_microservices(microservices_implementation)
-    
-    return generated_code, source_description, target_description, execution_result
+    return generated_code, source_description, target_description, execution_result, microservices_implementation, microservices_explanation
 
 def model2(source_language, target_language, source_code):
     source_description = generate_code_description(source_language, source_code)
@@ -407,7 +462,7 @@ if st.button("Convert"):
         with st.expander("Model 1"):
             st.subheader("Model 1")
             with st.spinner("Converting code and generating descriptions..."):
-                generated_code1, source_desc1, target_desc1, execution_result1= model1(source_language, target_language, source_code, code_mappings)
+                generated_code1, source_desc1, target_desc1, execution_result1, microservices_impl1, microservices_expl1= model1(source_language, target_language, source_code, code_mappings)
                 st.code(generated_code1, language=target_language.lower())
                 # st.subheader("Source Code Description")
                 # st.markdown(source_desc1)
@@ -452,10 +507,20 @@ if st.button("Convert"):
 
     with st.expander("Model Comparsion"):
         st.subheader("Comprehensive Analysis")
-        best_model, scores, explanations = compare_and_score_models(source_code, source_description, generated_codes, target_descriptions)
+        comparison_result = compare_models(source_code, source_description, generated_codes, target_descriptions)
         with st.spinner("Performing detailed analysis of model outputs..."):
-            llm_analysis = llm_analyze_comparison(source_code, source_description, generated_codes, target_descriptions, best_model, scores, explanations)
+            llm_analysis = explain_comparison(comparison_result)
         st.markdown(llm_analysis)
+    
+    with st.expander("Java Execution Result"):
+        if target_language.lower() == "java":
+            execution_result = save_and_execute_java(generated_code1)
+
+    with st.expander("Microservices Implementation and Explanation"):
+            st.subheader("Microservices Implementation")
+            st.code(microservices_impl1, language="java")
+            st.subheader("Microservices Explanation")
+            st.markdown(microservices_expl1)
 
 
 
