@@ -5,8 +5,7 @@ import os
 import base64
 from langchain_community.chat_models import ChatOpenAI
 import openai
-import tempfile
-import subprocess
+
 st.set_page_config(layout="wide")
 
 hide_st_style = """
@@ -124,28 +123,28 @@ def generate_code_description(language, code, is_source=False):
     
     description = response.choices[0].message.content.strip()
     return description
-def extract_class_name(java_code):
-    match = re.search(r'public\s+class\s+(\w+)', java_code)
-    if match:
-        return match.group(1)
-    return "GeneratedCode"
+# def extract_class_name(java_code):
+#     match = re.search(r'public\s+class\s+(\w+)', java_code)
+#     if match:
+#         return match.group(1)
+#     return "GeneratedCode"
 
-def save_and_execute_java(java_code):
-    class_name = extract_class_name(java_code)
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # Save the Java code to a temporary file with the correct class name
-        java_file_path = os.path.join(tmpdir, f"{class_name}.java")
-        with open(java_file_path, "w") as java_file:
-            java_file.write(java_code)
+# def save_and_execute_java(java_code):
+#     class_name = extract_class_name(java_code)
+#     with tempfile.TemporaryDirectory() as tmpdir:
+#         # Save the Java code to a temporary file with the correct class name
+#         java_file_path = os.path.join(tmpdir, f"{class_name}.java")
+#         with open(java_file_path, "w") as java_file:
+#             java_file.write(java_code)
         
-        # Compile the Java code
-        compile_command = ["javac", java_file_path]
-        compile_process = subprocess.run(compile_command, capture_output=True, text=True)
+#         # Compile the Java code
+#         compile_command = ["javac", java_file_path]
+#         compile_process = subprocess.run(compile_command, capture_output=True, text=True)
         
-        if compile_process.returncode != 0:
-            return f"Compilation Error:\n{compile_process.stderr}"
-        st.write("Compilation successful")
-        return compile_process.stdout
+#         if compile_process.returncode != 0:
+#             return f"Compilation Error:\n{compile_process.stderr}"
+#         st.write("Compilation successful")
+#         return compile_process.stdout
 
 def compare_models(source_code, source_description, generated_codes, target_descriptions):
     comparisons = []
@@ -508,9 +507,9 @@ if st.button("Convert"):
             llm_analysis = explain_comparison(comparison_result)
         st.markdown(llm_analysis)
     
-    with st.expander("Java Execution Result"):
-        if target_language.lower() == "java":
-            execution_result = save_and_execute_java(generated_code1)
+    # with st.expander("Java Execution Result"):
+    #     if target_language.lower() == "java":
+    #         execution_result = save_and_execute_java(generated_code1)
 
     with st.expander("Microservices Implementation and Explanation"):
             st.subheader("Microservices Implementation")
